@@ -1,0 +1,112 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <div> 
+        <h3> Sample Table</h3>
+    </div>
+    <br />
+    </hr>
+    <br />
+    <div>
+        <table id="example" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>ProgramURL</th>
+                    <th>Active</th>
+                    <th></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    <script src="~/Scripts/jquery.signalR-2.4.1.js"></script>
+    <script src="~/signalr/hubs"></script>
+    <script>
+        $(document).ready(function () {
+            Bind_Data();
+
+            $('#example tbody').on('click', 'button', function () {
+                var List = $('#example').DataTable();
+                var data = List.row($(this).parents('tr')).data();
+                console.log(data);
+                
+            });
+
+        });
+
+   //-------------------------------------------------------------------------------------------------------------------------------
+
+        function Bind_Data()
+        {
+            var SaverequstURL = "@Url.Content("~")" + "Program/GetList";
+            var table = $('#example').DataTable({
+                processing: true,
+                serverSide: true,
+                ordering: false,
+                paging: false,
+                searching: false,
+                ajax: SaverequstURL,
+                columns: [
+                    { "data": "Name" },
+                    { "data": "ProgramURL" },
+                    { "data": "Active" },
+                    { "defaultContent": "<button>Click!</button>" }
+                ],
+                columnDefs: [{
+                    "targets": -1,
+                    "data": null,
+                    "defaultContent": "<button>Click!</button>"
+                }]
+            });
+        }
+
+    </script>
+
+    
+    <script>
+        $(function () {
+            // Reference the auto-generated proxy for the hub.
+            var chat = $.connection.connectHub;
+            // Create a function that the hub can call back to display messages.
+            chat.client.UpdateList = function () {
+                // Add the message to the page.
+                var ProgramDataTable = $('#example').DataTable();
+                ProgramDataTable.ajax.reload();
+            };
+
+            
+            // Start the connection.
+            $.connection.hub.start().done(function () {
+
+                $('#example tbody').on('click', 'button', function () {
+                    var List = $('#example').DataTable();
+                    var data = List.row($(this).parents('tr')).data();
+                    var selectedUpdateID = data["ID"];
+
+
+                    // Call the Send method on the hub.
+                    chat.server.updateList(selectedUpdateID);
+
+                });
+            });
+        });
+    </script>
+
+
+</body>
+
+
+</html>
